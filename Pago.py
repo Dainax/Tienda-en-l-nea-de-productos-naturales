@@ -11,8 +11,8 @@ class Pago():
         
     def show(self):
         return f"""
-        Cliente: {self.cliente}
-        Monto: {self.factura}
+        Cliente: {self.cliente.show()}
+        Monto: {self.factura.show()}
         Moneda del pago: {self.divisa}
         Tipo de pago: {self.tipo} 
         Fecha:: {self.fecha}
