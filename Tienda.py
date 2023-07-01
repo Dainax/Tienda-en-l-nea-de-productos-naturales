@@ -3,6 +3,9 @@ from Cliente import Cliente
 from Venta import Venta
 from Motorizado import Motorizado
 from Desglose import Desglose
+from Envio import Envio
+from Envio import Delivery
+from Pago import Pago
 import json
 import requests
 
@@ -15,8 +18,14 @@ class Tienda:
         self.clientes = []
       #Lista de ventas
         self.ventas = []
+        #temporal
+        self.ventas2 = []
       #Lista de Informes
         self.informes = []
+      #Lista de envios 
+        self.envios = []
+      #Lista de pagos
+        self.pagos = []
       #Motorizados
         self.motorizados = []
 
@@ -170,7 +179,39 @@ class Tienda:
           
         #Llamada a la pausa
         self.pause() 
-                
+        
+    def registrar_pago(self, cliente, total):
+        cliente = cliente
+        factura = total
+        opciones = ["Tarjeta", "Pago móvil","Zelle"]
+        self.menucito(opciones)
+        eleccion = int(input("Cuál será su método de pago?"))
+        metpago = opciones[eleccion]
+                    
+        opciones = ["MRW", "Zoom","Delivery"]
+        self.menucito(opciones)
+        eleccion = int(input("Por cuál medio desea el delivery? "))
+        metenvio = opciones[eleccion]
+                    
+        subtotal = 0
+        for producto in self.carrito:
+             if producto.price > 0:
+                subtotal = subtotal + producto.price
+                descuento = 0
+                iva = subtotal * 0.3
+             if metpago == "Zelle" or metpago == "Tarjeta":
+                    igtf = subtotal * 0.3
+                    divisa = "USD"
+             else:
+                    igtf = 0
+                    divisa = "VEF"
+                    
+        tipo = metpago
+        total = subtotal + igtf + iva
+                    
+        factura = Desglose(subtotal, descuento, iva, igtf, total)
+         
+
     def registrar_venta(self):
             dni = input("Ingresa el DNI del cliente: ")
             for client in self.clientes:
@@ -214,32 +255,89 @@ class Tienda:
                     compras = self.carrito
                     opciones = ["Tarjeta", "Pago móvil","Zelle"]
                     self.menucito(opciones)
-                    eleccion = int(input("Cuál será su método de pago?"))
-                    metpago = opciones[eleccion]
+                    eleccion = int(input("Cuál será su método de pago? "))
+                    metpago = opciones[eleccion-1]
                     
                     opciones = ["MRW", "Zoom","Delivery"]
                     self.menucito(opciones)
-                    eleccion = int(input("Por cuál medio desea el delivery? "))
-                    metenvio = opciones[eleccion]
+                    eleccion = int(input("Por cuál medio desea la entrega? "))
+                    metenvio = opciones[eleccion-1]
                     
                     subtotal = 0
+                    
                     for producto in self.carrito:
                         if producto.price > 0:
                             subtotal = subtotal + producto.price
+                            
                     descuento = 0
                     iva = subtotal * 0.3
+                    
                     if metpago == "Zelle" or metpago == "Tarjeta":
+                        
                         igtf = subtotal * 0.3
+                        divisa = "USD"
+                        tipo = metpago
+                        
+                        
                     else:
                         igtf = 0
-                    total = subtotal + igtf + iva
+                        divisa = "VEF"
+                        tipo = metpago
+                        
+                    if metenvio == "MRW" or metenvio == "Zoom":
+                        cliente = cliente
+                        orden = compras
+                        servicio = metenvio
+                        costo = 6
+                        fecha = input("Inserte la fecha de hoy: ")
+                        while not any(chr.split("/") for chr in fecha):
+                            fecha = input("Error! Ingrese una fecha valida con el siguiente formato: DY/MT/YR ")
+                        
+                        new_envio = Envio(cliente, orden, servicio , costo, fecha)
+                        self.envios.append(new_envio)
+                        
+                        
+                    elif metenvio == "Delivery":
+                        cliente = cliente
+                        orden = compras
+                        servicio = metenvio
+                        costo = 3
+                        motorizado = self.motorizados[-1]
+                        fecha = input("Inserte la fecha de hoy: ")
+                        while not any(chr.split("/") for chr in fecha):
+                            fecha = input("Error! Ingrese una fecha valida con el siguiente formato: DY/MT/YR ")
+                        
+                        new_envio = Delivery(cliente, orden, servicio , costo, fecha, motorizado)
+                        self.envios.append(new_envio)
+                        
+                    envio = costo
+                    total = subtotal + igtf + iva + costo
                     
-                    factura = Desglose(subtotal, descuento, iva, igtf, total)
+                    factura = Desglose(subtotal, descuento, iva, igtf, envio,  total)
 
-                    fecha = input("Ingrese la fecha")
+                    fecha = fecha
                     
+                    new_pago = Pago(cliente,factura,divisa,tipo,fecha)
+                    self.pagos.append(new_pago)
                     nueva_venta = Venta(cliente, compras , metpago, metenvio, factura, fecha)
                     self.ventas.append(nueva_venta)
+                    self.ventas2.append(nueva_venta)
+                    
+                    print("A continuacion se imprimirá tu factura")
+                    print("envio: ")
+                    print(new_envio.show())
+                    print("factura")
+                    print(nueva_venta.show())
+                    
+                    for i in range(len(self.ventas2)):
+                        pass
+                        for j in self.ventas:
+                         print("Productos comprados: ")
+                         for n in j.compras:
+                            print(n.show())
+                            print("----------------------------")
+                            
+                    self.ventas2.clear()
                     
                     #Llamada a la pausa
                     self.pause() 
@@ -258,34 +356,143 @@ class Tienda:
                         self.pause() 
 
     
+    def search_pago(self):
+        print("Como desea buscar el Pago?")
+        opciones = ["Fecha","Tipo de pago", "Moneda de pago"]
+        self.menucito(opciones)
+        eleccion = input("Ingrese el número de la opción que desee: ")
+        
+        #Validacion de nombre
+        if eleccion == "1":
+            fecha = input("Ingresa la fecha del pago que deseas buscar: ")
+                
+            for pago in self.pagos:
+                if pago.fecha == fecha:
+                    print("El pago si existe: ")
+                    print(pago.show())
+
+        if eleccion == "2":
+            tipo = input("Ingresa el tipo del pago que deseas buscar: ")
+            for pago in self.pagos:
+                if pago.tipo == pago:
+                    print("El pago si existe: ")
+                    print(pago.show())
+                else:
+                    pass
+        if eleccion == "3":
+            divisa = input("Ingresa la divisa del pago que deseas buscar: ")
+            for pago in self.pagos:
+                if pago.tipo == pago:
+                    print("El pago si existe: ")
+                    print(pago.show())
+                else:
+                    pass            
             
+                
+        if eleccion == "3":
+            name = input("Ingresa el nombre del producto que deseas buscar: ")
+            name=name.lower()
+            name=name.title()
+            while any(chr.isdigit() for chr in name) or not name.isalpha():
+                name = input("Error! Ingrese un nombre válido: ")
+                name=name.lower()
+                name=name.title()
+                    
+            for producto in self.productos:
+                if producto.name == name:
+                    print("El producto si existe: ")
+                    print(producto.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El producto {name} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo producto? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_producto()
+                else:
+                    pass
+                
+        if eleccion == "4":
+            pass
+                
+
+        #Llamada a la pausa
+        self.pause()
             
     def search_product(self):
         #Variable auxliar para agregar el producto de ser el caso
         Existencia = 0
+        print("Como desea buscar el Producto?")
+        opciones = ["Categoria", "Precio","Nombre", "Cerrar"]
+        self.menucito(opciones)
+        eleccion = input("Ingrese el número de la opción que desee: ")
+        
         #Validacion de nombre
-        name = input("Ingresa el nombre del producto que deseas buscar: ")
-        name=name.lower()
-        name=name.title()
-        while any(chr.isdigit() for chr in name) or not name.isalpha():
-            name = input("Error! Ingrese un nombre válido: ")
+        if eleccion == "1":
+            category = input("Ingresa la categoria del producto que deseas buscar: ")
+                
+            for producto in self.productos:
+                if producto.category == category:
+                    print("El producto si existe: ")
+                    print(producto.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El producto {name} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo producto? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_producto()
+                else:
+                    pass
+                
+        if eleccion == "2":
+            price = input("Ingresa el precio del producto que deseas buscar: ")
+            while any(chr.isalpha() for chr in price) or not price.isdigit():
+                price = input("Error! Ingrese el precio correctamente: ")
+            for producto in self.productos:
+                if producto.price == price:
+                    print("El producto si existe: ")
+                    print(producto.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El producto {name} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo producto? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_producto()
+                else:
+                    pass
+                
+        if eleccion == "3":
+            name = input("Ingresa el nombre del producto que deseas buscar: ")
             name=name.lower()
             name=name.title()
+            while any(chr.isdigit() for chr in name) or not name.isalpha():
+                name = input("Error! Ingrese un nombre válido: ")
+                name=name.lower()
+                name=name.title()
+                    
+            for producto in self.productos:
+                if producto.name == name:
+                    print("El producto si existe: ")
+                    print(producto.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El producto {name} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo producto? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_producto()
+                else:
+                    pass
                 
-        for producto in self.productos:
-            if producto.name == name:
-                print("El producto si existe: ")
-                print(producto.show())
-                Existencia = 1
-        if Existencia == 0:
-            print(f"""El producto {name} no existe""")
-             #Despues de la creacion devuelve al menu
-            choice = input("Te gustaría agregar un nuevo producto? Y/N ")
-            self.ver_yn(choice)
-            if choice == "Y":
-                self.agregar_producto()
-            else:
-                pass
+        if eleccion == "4":
+            pass
+                
 
         #Llamada a la pausa
         self.pause()
@@ -375,23 +582,87 @@ class Tienda:
     def search_client(self):
         #Variable auxiliar existencia para decir si un cliente existe o no
         Existencia = 0
-        dni = input("Ingresa el DNI del cliente que deseas buscar: ")
-        for client in self.clientes:
-            if client.dni == dni:
-                print(client.show())
-                Existencia = 1
-        if Existencia == 0:
-            print(f"""El cliente {dni} no existe""")
-            #Despues de la creacion devuelve al menu
-            choice = input("Te gustaría agregar un nuevo cliente? Y/N ")
-            self.ver_yn(choice)
-            if choice == "Y":
-                self.agregar_cliente()
-            else:
-                pass
+        print("Como desea buscar el cliente?")
+        opciones = ["DNI", "Email", "Cerrar"]
+        self.menucito(opciones)
+        eleccion = input("Ingrese el número de la opción que desee: ")
+        if eleccion == "1":
+            dni = input("Ingresa el DNI del cliente que deseas buscar: ")
+            for client in self.clientes:
+                if client.dni == dni:
+                    print(client.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El cliente {dni} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo cliente? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_cliente()
+                else:
+                    pass
+        if eleccion == "2":
+            email = input("Ingresa el Email del cliente que deseas buscar: ")
+            for client in self.clientes:
+                if client.email == email:
+                    print(client.show())
+                    Existencia = 1
+            if Existencia == 0:
+                print(f"""El cliente {dni} no existe""")
+                #Despues de la creacion devuelve al menu
+                choice = input("Te gustaría agregar un nuevo cliente? Y/N ")
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.agregar_cliente()
+                else:
+                    pass
             
-        #Llamada a la pausa
-        self.pause()
+            
+    def search_ventas(self):
+        #Variable auxiliar existencia para decir si un cliente existe o no
+        print("Como desea buscar la venta?")
+        opciones = ["Cliente", "Fecha", "Monto total"]
+        self.menucito(opciones)
+        eleccion = input("Ingrese el número de la opción que desee: ")
+        
+        if eleccion == "1":
+            name = input("Ingresa el nombre del cliente")
+            for j in self.ventas:
+                if j.name == name:
+                    print(j.show())
+     
+        if eleccion == "2":
+            fecha = input("Ingresa la fecha del envio que deseas buscar: ")
+            for venta in self.ventas:
+                if venta.fecha == fecha:
+                    print(venta.show())
+        if eleccion == "3":
+            total = input("Ingresa el monto de la venta")
+            for j in self.facturas:
+                if j.fecha == total:
+                    print(j.show())
+             
+                    
+    def search_envio(self):
+        #Variable auxiliar existencia para decir si un cliente existe o no
+        print("Como desea buscar el envio?")
+        opciones = ["Cliente", "Fecha"]
+        self.menucito(opciones)
+        eleccion = input("Ingrese el número de la opción que desee: ")
+        
+        if eleccion == "1":
+            name = input("Ingresa el nombre del cliente")
+            for j in self.envios:
+                if j.name == name:
+                    print(j.show())
+           
+        if eleccion == "2":
+            fecha = input("Ingresa la fecha del envio que deseas buscar: ")
+            for envio in self.envios:
+                if envio.fecha == fecha:
+                    print(envio.show())
+
+
         
     def modify_client(self):
         dni = input("Introduce el DNI del cliente a modificar: ")
@@ -418,16 +689,28 @@ class Tienda:
                     
                 elif eleccion == "2":
                     client.last_name = input("Escriba el nuevo apellido del cliente: ")
+                    last_name=last_name.lower()
+                    last_name=last_name.title()
+                    while any(chr.isdigit() for chr in last_name) or not last_name.isalpha():
+                        last_name = input("Error! Ingrese el apellido del cliente: ")
+                        last_name=last_name.lower()
+                        last_name=last_name.title()
                     print(f"""El cliente {dni} se ha modificado: """)
                     print(client.show())
                     
                 elif eleccion == "3":  
                     client.dni = input("Escriba el nuevo precio del cliente: ")
+                    while any(chr.isalpha() for chr in dni) or not dni.isdigit():
+                        dni = input("Error! Ingrese el DNI del cliente: ")
                     print(f"""El client {dni} se ha modificado: """)
                     print(client.show())
                     
                 elif eleccion == "4": 
                     client.email = input("Escriba la nueva categoría del cliente: ")
+                    email=email.lower()
+                    while email.endswith("@") or email.endswith(".") or email.startswith(".") or email.startswith("@") or not any(chr.split("@") for chr in email) or not any(chr=="." for chr in email):
+                        email = input("Error! Ingrese el correo electrónico del cliente: /Formato de ejemplo = tienda@tienda.com")
+                        email=email.lower()
                     print(f"""El cliente {dni} se ha modificado: """)
                     print(client.show())
                     
@@ -438,6 +721,8 @@ class Tienda:
                     
                 elif eleccion == "6": 
                     client.cellphone = input("Escriba el nuevo número de teléfono del cliente: ")
+                    while any(chr.isalpha() for chr in cellphone) or not cellphone.isdigit() or not len(cellphone)==11:
+                        cellphone = input("Error! Ingrese el número de teléfono del cliente: /Formato de ejemplo = 04XX-1234567, sin guiones ")
                     print(f"""El cliente {dni} se ha modificado: """)
                     print(client.show())
                     
@@ -458,7 +743,12 @@ class Tienda:
                     print("----------------------------")
                 
                 
-                
+    def mostrar_envios(self):
+        print("----------------------------")
+        for i in range(len(self.envios)):
+            print(f"{i+1}. {self.envios[i].show()}")
+            print("----------------------------")        
+             
     def mostrar_clientes(self):
         print("----------------------------")
         for i in range(len(self.clientes)):
@@ -470,6 +760,12 @@ class Tienda:
         for i in range(len(self.productos)):
             print(f"{i+1}. {self.productos[i].show()}")
             print("----------------------------")
+            
+    def mostrar_pagos(self):
+        print("----------------------------")
+        for i in range(len(self.pagos)):
+            print(f"{i+1}. {self.pagos[i].show()}")
+            print("----------------------------")
         
     def menucito(self,opciones):
         print("----------------------------")
@@ -477,20 +773,13 @@ class Tienda:
                 print(f"{opcion+1} / {opciones[opcion]}")
                 print("----------------------------")
 
-    def val_election(self, eleccion, opciones):
-        opciones = opciones
-        if eleccion not in range(len(opciones)):
-            eleccion = input("La eleccion es inválida, elija un número que esté en el menú: ")
-        else:
-            pass
-            
     def menu(self):
         Start = 0
         if Start == 0:
             self.get_api()
             Start+1
         #Lista de opciones que se usa con el metodo self.menucito
-        opciones = ["Mostrar productos", "Agregar producto", "Buscar producto", "Modificar producto", "Eliminar producto","Registrar cliente" ,"Mostrar clientes", "Buscar cliente","Modificar cliente" ,"Mostrar ventas", "Registrar venta", "Generar factura", "Buscar venta", "Mostrar pagos", "Registrar pago", "Buscar pago","Mostrar envios", "Registrar envio", "Buscar envio", "Salir"]
+        opciones = ["Mostrar productos", "Agregar producto", "Buscar producto", "Modificar producto", "Eliminar producto","Registrar cliente" ,"Mostrar clientes", "Buscar cliente","Modificar cliente" ,"Mostrar ventas", "Registrar venta", "Buscar venta", "Mostrar pagos", "Buscar pago","Mostrar envios", "Buscar envio", "Salir"]
 
         while True:
             print(f"""
@@ -503,8 +792,8 @@ class Tienda:
 
             eleccion = input("Ingrese el número de la opción que desee: ")
             if eleccion == "1":
-                
                 self.mostrar_productos()
+                self.pause()       
             elif eleccion == "2":
                 self.agregar_producto()
             elif eleccion == "3":
@@ -523,8 +812,20 @@ class Tienda:
                 self.modify_client()
             elif eleccion == "10":
                 self.mostrar_ventas()
+                self.pause()  
             elif eleccion == "11":
                 self.registrar_venta()
+            elif eleccion == "12":
+                self.search_ventas()
+            elif eleccion == "13":
+                self.mostrar_pagos()
+                self.pause()  
+            elif eleccion == "14":
+                self.search_pago()
+                self.pause() 
+            elif eleccion == "15":
+                self.mostrar_envios()
+                self.pause()  
             else:
                 print("Fin del programa")
                 break
