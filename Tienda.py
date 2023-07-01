@@ -1,0 +1,530 @@
+from Producto import Producto
+from Cliente import Cliente
+from Venta import Venta
+from Motorizado import Motorizado
+from Desglose import Desglose
+import json
+import requests
+
+class Tienda:
+    #Listas que serán cambiadas por el programa
+    def __init__(self):
+      #Lista de productos
+        self.productos = []
+      #Lista de clientes
+        self.clientes = []
+      #Lista de ventas
+        self.ventas = []
+      #Lista de Informes
+        self.informes = []
+      #Motorizados
+        self.motorizados = []
+
+
+    def get_api(self):
+        #print para verificar que se esté llamando al API correctamente
+        print(requests.get("https://raw.githubusercontent.com/Algoritmos-y-Programacion-2223-3/api-proyecto/main/products.json"))
+
+        response = requests.get("https://raw.githubusercontent.com/Algoritmos-y-Programacion-2223-3/api-proyecto/main/products.json").text
+        
+        #Variable para guardar el texto
+        objeto = json.loads(response)
+        print(objeto)
+        for i in objeto:
+        #Conversion a objetos del tipo Producto
+         new_product = Producto(i["name"], i["description"], i["price"], i["category"], i["quantity"])
+         self.productos.append(new_product)
+         
+         #Motorizado de prueba(Es para no andarlos registrando)
+        moto =[
+    {
+        "name": "Alex",
+        "last_name": "Ferrer",
+        "cellphone": "04122345678"
+
+    } 
+        ]
+        for i in moto:
+            
+        #Agregar motorizado
+            new_motorizado = Motorizado(i["name"], i["last_name"], i["cellphone"])
+            self.motorizados.append(new_motorizado)
+        #Mostrar motorizados
+        for i in range(len(self.motorizados)):
+            print(f"{i+1}. {self.motorizados[i].show()}")
+
+    def pause(self):
+        #Pausa activa que se usan en casi todos los metodos, así la pantalla se ve más organizada al hacerle run
+        print("Toque cualquier botón para volver al menú")
+        pause = input(" ")
+        if pause == "":
+         pass
+        else:
+         pass
+     
+    def agregar_producto(self):
+        #Se agregan nuevos objetos del tipo producto a la lista self.productos
+        qty = int(input("Cuántos productos deseas agregar?: "))
+        
+        for i in range(qty):
+            name = input("Ingrese el nombre del producto: ")
+            name=name.lower()
+            name=name.title()
+            
+            while any(chr.isdigit() for chr in name) or not name.isalpha():
+                name = input("Error! Dato inválido. Ingrese el nombre del producto: ")
+                name=name.lower()
+                name=name.title()
+                
+            description = input("Ingrese la descripción del producto: ")
+            
+            price = input("Ingrese el precio del producto: ")
+            while any(chr.isalpha() for chr in price) or not price.isdigit():
+                price = input("Error! Dato inválido. Ingrese el precio del producto: ")
+                
+            category = input("Ingrese la categoría del producto: ")
+            
+            quantity = input("Ingrese la cantidad del producto: ")
+            
+            while any(chr.isalpha() for chr in quantity) or not quantity.isdigit():
+                quantity = input("Error! Dato inválido. Ingrese el stock del producto: ")   
+                
+            nuevo_producto = Producto(name,description,price,category,quantity)
+            self.productos.append(nuevo_producto)
+            
+            print(f"Se ha registrado un nuevo producto: {name} ")
+            
+        #Llamada a la pausa
+        self.pause()
+             
+    def modify_product(self):
+        #Modifica un producto
+        name = input("Introduce el nombre del producto a modificar: ")
+        for producto in self.productos:
+            if producto.name == name:
+                print(f""" Producto {name} encontrado!""")
+                #Lista de opciones del metodo
+                opciones = ["Modificar Nombre", "Modificar Descripción","Modificar Precio","Modificar Categoría", "Modificar Cantidad", "Cancelar"]
+                 #Lista de opciones que se usa con el metodo self.menucito
+                self.menucito(opciones)
+                eleccion = input("Ingrese el número de la opcion que desee: ")
+                #Validacion del rango de opciones
+                
+                if eleccion == "1":
+                    #Validacion de nombre
+                    producto.name = input("Escriba el nuevo nombre del producto: ")
+                    producto.name = producto.name.lower()
+                    producto.name = producto.name.title()
+                    while any(chr.isdigit() for chr in producto.name) or not producto.name.isalpha():
+                        producto.name = producto.name.lower()
+                        producto.name = producto.name.title()
+                    print(f"""El producto {name} se ha modificado: """)
+                    print(producto.show())
+                    
+                elif eleccion == "2":
+                    producto.description = input("Escriba la nueva descripcion del producto: ")
+                    print(f"""El producto {name} se ha modificado: """)
+                    print(producto.show())
+                    
+                elif eleccion == "3":  
+                    #Validacion de precio
+                    producto.price = input("Escriba el nuevo precio del producto: ")
+                    while any(chr.isalpha() for chr in producto.price) or not producto.price.isdigit():
+                        producto.price = input("Error! Ingrese el DNI del cliente: ")
+                    print(f"""El producto {name} se ha modificado: """)
+                    print(producto.show())
+                    
+                elif eleccion == "4": 
+                    producto.category = input("Escriba la nueva categoria del producto: ")
+                    print(f"""El producto {name} se ha modificado: """)
+                    print(producto.show())
+                    
+                elif eleccion == "5": 
+                    #Validacion de entero
+                    producto.quantity = input("Escriba la nueva cantidad del producto: ")
+                    while any(chr.isalpha() for chr in producto.quantity) or not producto.quantity.isdigit():
+                         producto.quantity = input("Error! Ingrese el DNI del cliente: ")
+                    print(f"""El producto {name} se ha modificado: """)
+                    print(producto.show())
+                    
+                elif eleccion == "6": 
+                    print("Nada ha cambiado")
+                    pass
+                    
+    
+        #Llamada a la pausa
+        self.pause()
+
+    def delete_product(self):
+        #Elimina un producto de la lista self.productos
+        dele = input("Ingresa el nombre del producto que quieres borrar: ")
+        for producto in self.productos:
+            if producto.name == dele:
+                posicion = self.productos.index(producto)
+                choice = input(f"""Se borrará el producto {dele}, continuar? (Y/N): """)
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.productos.pop(posicion)      
+                elif choice == "N":
+                    print("Cancelado")
+          
+        #Llamada a la pausa
+        self.pause() 
+                
+    def registrar_venta(self):
+            dni = input("Ingresa el DNI del cliente: ")
+            for client in self.clientes:
+                if client.dni == dni:
+                    cliente = client
+                    self.carrito = []
+                    aux = 0
+                    print("Cliente encontrado con éxito!")
+                    choice = input("Deseas agregar mas productos a tu carrito? Y/N ")
+                    self.ver_yn(choice)
+                    if choice == "Y":
+                        while aux == 0:
+                            self.mostrar_productos()
+                            eleccion = int(input("Seleccione el índice del producto que desea elegir: "))
+                            if eleccion not in range(len(self.productos)):
+                                print("El indice del producto no existe")
+                            for i in range(len(self.productos)):
+                                if i+1 == eleccion:
+                                    print(f"{self.productos[i].show()}")
+                                    cosa = self.productos[i]
+                                    self.carrito.append(cosa)
+                                    print("Su carrito hasta ahora:")
+                                    for j in range(len(self.carrito)):
+                                        print(f"{j+1}. {self.carrito[j].show()}")
+                                    choice = input("Desea agregar otro producto? Y/N ")
+                                    self.ver_yn(choice)
+                                    if choice == "Y":
+                                        pass
+                                    elif choice == "N":
+                                        aux = aux+1
+                            print("Su carrito final es: ")
+                            #Muestra el carrito completo
+                            for j in range(len(self.carrito)):
+                                    print(f"{j+1}. {self.carrito[j].show()}")
+                                    
+                    if choice == "N":
+                        pass
+                    
+                    self.factu = []
+                    
+                    compras = self.carrito
+                    opciones = ["Tarjeta", "Pago móvil","Zelle"]
+                    self.menucito(opciones)
+                    eleccion = int(input("Cuál será su método de pago?"))
+                    metpago = opciones[eleccion]
+                    
+                    opciones = ["MRW", "Zoom","Delivery"]
+                    self.menucito(opciones)
+                    eleccion = int(input("Por cuál medio desea el delivery? "))
+                    metenvio = opciones[eleccion]
+                    
+                    subtotal = 0
+                    for producto in self.carrito:
+                        if producto.price > 0:
+                            subtotal = subtotal + producto.price
+                    descuento = 0
+                    iva = subtotal * 0.3
+                    if metpago == "Zelle" or metpago == "Tarjeta":
+                        igtf = subtotal * 0.3
+                    else:
+                        igtf = 0
+                    total = subtotal + igtf + iva
+                    
+                    factura = Desglose(subtotal, descuento, iva, igtf, total)
+
+                    fecha = input("Ingrese la fecha")
+                    
+                    nueva_venta = Venta(cliente, compras , metpago, metenvio, factura, fecha)
+                    self.ventas.append(nueva_venta)
+                    
+                    #Llamada a la pausa
+                    self.pause() 
+                    
+
+                else:
+                    print("El cliente no existe")
+                    choice = input("Deseas agregar el cliente al sistema? Y/N ")
+                    self.ver_yn(choice)
+                    if choice == "Y":
+                        self.agregar_cliente()
+                    elif choice == "N":
+                        print("Regresando al menú...")
+                        
+                        #Llamada a la pausa
+                        self.pause() 
+
+    
+            
+            
+    def search_product(self):
+        #Variable auxliar para agregar el producto de ser el caso
+        Existencia = 0
+        #Validacion de nombre
+        name = input("Ingresa el nombre del producto que deseas buscar: ")
+        name=name.lower()
+        name=name.title()
+        while any(chr.isdigit() for chr in name) or not name.isalpha():
+            name = input("Error! Ingrese un nombre válido: ")
+            name=name.lower()
+            name=name.title()
+                
+        for producto in self.productos:
+            if producto.name == name:
+                print("El producto si existe: ")
+                print(producto.show())
+                Existencia = 1
+        if Existencia == 0:
+            print(f"""El producto {name} no existe""")
+             #Despues de la creacion devuelve al menu
+            choice = input("Te gustaría agregar un nuevo producto? Y/N ")
+            self.ver_yn(choice)
+            if choice == "Y":
+                self.agregar_producto()
+            else:
+                pass
+
+        #Llamada a la pausa
+        self.pause()
+                        
+    
+    def agregar_cliente(self):
+        qty = int(input("Cuántos clientes deseas agregar?: "))
+        for i in range(qty):
+            #Validacion de nombre
+            name=input("Ingrese el nombre del cliente: ")
+            name=name.lower()
+            name=name.title()
+            while any(chr.isdigit() for chr in name) or not name.isalpha():
+                name = input("Error! Ingrese el nombre del cliente: ")
+                name=name.lower()
+                name=name.title()
+            
+            #Validacion de nombre
+            last_name=input("Ingrese el apellido del cliente: ")
+            last_name=last_name.lower()
+            last_name=last_name.title()
+            while any(chr.isdigit() for chr in last_name) or not last_name.isalpha():
+                last_name = input("Error! Ingrese el apellido del cliente: ")
+                last_name=last_name.lower()
+                last_name=last_name.title()
+            
+            #Validacion de nombre
+            dni=input("Ingrese el DNI del cliente: ")
+            while any(chr.isalpha() for chr in dni) or not dni.isdigit():
+                dni = input("Error! Ingrese el DNI del cliente:  ")
+                
+            #Validacion de email
+            email=input("Ingrese el correo electrónico del cliente: ")
+            email=email.lower()
+            while email.endswith("@") or email.endswith(".") or email.startswith(".") or email.startswith("@") or not any(chr.split("@") for chr in email) or not any(chr=="." for chr in email):
+                email = input("Error! Ingrese el correo electrónico del cliente: /Formato de ejemplo = tienda@tienda.com ")
+                email=email.lower()
+                
+            direction = input("Escriba la dirección del cliente: ")
+            
+            #Validacion de celular
+            cellphone=input("Ingrese el número de teléfono del cliente: ")
+            while any(chr.isalpha() for chr in cellphone) or not cellphone.isdigit() or not len(cellphone)==11:
+                 cellphone = input("Error! Ingrese el número de teléfono del cliente: /Formato de ejemplo = 04XX-1234567, sin guiones ")
+            
+            nuevo_cliente = Cliente(name,last_name,dni,email,direction,cellphone)
+            self.clientes.append(nuevo_cliente)
+            print(f"Se ha registrado un nuevo cliente: {name} ")
+            
+            #Llamada a la pausa
+            self.pause() 
+            
+    def delete_client(self):
+        #Cliente borrado se elimina de la lista self.clientes
+        dele = input("Ingresa el DNI del cliente que quieres borrar: ")
+        for client in self.clientes:
+            if client.dni == dele:
+                self.mostrar_clientes()
+                #Pide el indice del cliente para borrarlo
+                posicion = self.clientes.index(client) - 1
+                choice = input(f"""Se borrará el cliente {dele}, continuar? (Y/N): """)
+                self.ver_yn(choice)
+                if choice == "Y":
+                    self.clientes.pop(posicion)   
+                    #Llamada a la pausa
+                    self.pause()    
+                elif choice == "N":
+                    print("Cancelado")
+                    #Llamada a la pausa
+                    self.pause() 
+                    
+                    
+                    
+    #Verificacion de Si o no como Y y N, las utilizo en metodos de registro y eleccion                
+    def ver_yn(self,choice):
+        choice = choice.upper()
+        elec = 0
+        while elec == 0:
+            choice = choice.upper()
+            if choice == "Y" or choice == "N":
+                elec = elec+1
+            else:
+                choice = input("Seleccion inválida, por favor selecciona Y o N ")
+                elec = 0
+            
+    #Búsqueda de cliente en la lista clientes, si no hay clientes agregados primeros no mostrará nada y se irá al menú
+    def search_client(self):
+        #Variable auxiliar existencia para decir si un cliente existe o no
+        Existencia = 0
+        dni = input("Ingresa el DNI del cliente que deseas buscar: ")
+        for client in self.clientes:
+            if client.dni == dni:
+                print(client.show())
+                Existencia = 1
+        if Existencia == 0:
+            print(f"""El cliente {dni} no existe""")
+            #Despues de la creacion devuelve al menu
+            choice = input("Te gustaría agregar un nuevo cliente? Y/N ")
+            self.ver_yn(choice)
+            if choice == "Y":
+                self.agregar_cliente()
+            else:
+                pass
+            
+        #Llamada a la pausa
+        self.pause()
+        
+    def modify_client(self):
+        dni = input("Introduce el DNI del cliente a modificar: ")
+        for client in self.clientes:
+            if client.dni == dni:
+                
+                print(f""" Cliente {dni} encontrado!""")
+                
+                #Lista de opciones que se usa con el metodo self.menucito
+                opciones = ["Modificar Nombre", "Modificar Apellido","Modificar DNI","Modificar email", "Modificar direccion", "Modificar telefono", "Cerrar"]
+                self.menucito(opciones)
+                eleccion = input("Ingrese el número de la opción que desee: ")
+                
+                if eleccion == "1":
+                    client.name = input("Escriba el nuevo nombre del cliente: ")
+                    client.name = client.name.lower()
+                    client.name = client.name.title()
+                    while any(chr.isdigit() for chr in client.name) or not client.name.isalpha():
+                        client.name = input("Error! Ingrese el nombre del cliente: ")
+                        client.name=client.name.lower()
+                        client.name=client.name.title()
+                    print(f"""El cliente {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "2":
+                    client.last_name = input("Escriba el nuevo apellido del cliente: ")
+                    print(f"""El cliente {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "3":  
+                    client.dni = input("Escriba el nuevo precio del cliente: ")
+                    print(f"""El client {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "4": 
+                    client.email = input("Escriba la nueva categoría del cliente: ")
+                    print(f"""El cliente {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "5": 
+                    client.direction = input("Escriba la nueva cantidad del cliente: ")
+                    print(f"""El cliente {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "6": 
+                    client.cellphone = input("Escriba el nuevo número de teléfono del cliente: ")
+                    print(f"""El cliente {dni} se ha modificado: """)
+                    print(client.show())
+                    
+                elif eleccion == "7":
+                    print("Nada ha cambiado")
+                    pass
+        #Llamada a la pausa
+        self.pause()             
+        
+    def mostrar_ventas(self):
+        
+        for i in range(len(self.ventas)):
+            print(f"{i+1}. {self.ventas[i].show()}") 
+            for j in self.ventas:
+                print("Productos comprados: ")
+                for n in j.compras:
+                    print(n.show())
+                    print("----------------------------")
+                
+                
+                
+    def mostrar_clientes(self):
+        print("----------------------------")
+        for i in range(len(self.clientes)):
+            print(f"{i+1}. {self.clientes[i].show()}")
+            print("----------------------------")
+            
+    def mostrar_productos(self):
+        print("----------------------------")
+        for i in range(len(self.productos)):
+            print(f"{i+1}. {self.productos[i].show()}")
+            print("----------------------------")
+        
+    def menucito(self,opciones):
+        print("----------------------------")
+        for opcion in range(len(opciones)):
+                print(f"{opcion+1} / {opciones[opcion]}")
+                print("----------------------------")
+
+    def val_election(self, eleccion, opciones):
+        opciones = opciones
+        if eleccion not in range(len(opciones)):
+            eleccion = input("La eleccion es inválida, elija un número que esté en el menú: ")
+        else:
+            pass
+            
+    def menu(self):
+        Start = 0
+        if Start == 0:
+            self.get_api()
+            Start+1
+        #Lista de opciones que se usa con el metodo self.menucito
+        opciones = ["Mostrar productos", "Agregar producto", "Buscar producto", "Modificar producto", "Eliminar producto","Registrar cliente" ,"Mostrar clientes", "Buscar cliente","Modificar cliente" ,"Mostrar ventas", "Registrar venta", "Generar factura", "Buscar venta", "Mostrar pagos", "Registrar pago", "Buscar pago","Mostrar envios", "Registrar envio", "Buscar envio", "Salir"]
+
+        while True:
+            print(f"""
+                    HOLA! 
+                BIENVENIDO A
+            "Tiendita Mamá luchona"
+
+                """)
+            self.menucito(opciones)
+
+            eleccion = input("Ingrese el número de la opción que desee: ")
+            if eleccion == "1":
+                
+                self.mostrar_productos()
+            elif eleccion == "2":
+                self.agregar_producto()
+            elif eleccion == "3":
+                self.search_product()
+            elif eleccion == "4":
+                self.modify_product()
+            elif eleccion == "5":
+                self.delete_product()
+            elif eleccion == "6":
+                self.agregar_cliente()
+            elif eleccion == "7":
+                self.mostrar_clientes()
+            elif eleccion == "8":
+                self.search_client()
+            elif eleccion == "9":
+                self.modify_client()
+            elif eleccion == "10":
+                self.mostrar_ventas()
+            elif eleccion == "11":
+                self.registrar_venta()
+            else:
+                print("Fin del programa")
+                break
