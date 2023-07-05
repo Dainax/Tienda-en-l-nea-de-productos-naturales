@@ -12,9 +12,9 @@ class Desglose:
     def show(self):
         return f"""
         Subtotal: ${self.subtotal}
-        Descuentos: {self.descuento}%
+        Descuentos: ${self.descuento}
         IVA: 16% - ${self.iva} 
-        IGTF: 3% {self.igtf}
-        Envio: {self.envio}
+        IGTF: 3% - ${self.igtf}
+        Envio: ${self.envio}
         Total: ${self.total}
         """
