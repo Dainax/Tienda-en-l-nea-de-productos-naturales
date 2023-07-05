@@ -327,12 +327,19 @@ class Tienda:
                         compras = self.carrito
                         opciones = ["Tarjeta", "Pago móvil","Zelle"]
                         self.menucito(opciones)
-                        eleccion = int(input("Cuál será su método de pago? "))
+                        eleccion = (input("Cuál será su método de pago? "))
+                        while any(chr.isalpha() for chr in eleccion) or not eleccion.isdigit():
+                            eleccion = (input("Cuál será su método de pago? (Ingrese un número) "))
+                        eleccion = int(eleccion)
                         metpago = opciones[eleccion-1]
                         
                         opciones = ["MRW", "Zoom","Delivery"]
                         self.menucito(opciones)
-                        eleccion = int(input("Por cuál medio desea la entrega? "))
+                        eleccion = (input("Por cuál medio desea la entrega? "))
+                        while any(chr.isalpha() for chr in eleccion) or not eleccion.isdigit():
+                            eleccion = (input("Cuál será su método de envio? (Ingrese un número) "))
+                            
+                        eleccion = int(eleccion)
                         metenvio = opciones[eleccion-1]
                         
                         subtotal = 0
