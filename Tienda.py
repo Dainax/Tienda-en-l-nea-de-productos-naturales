@@ -111,7 +111,7 @@ class Tienda:
             
             while any(chr.isalpha() for chr in quantity) or not quantity.isdigit():
                 quantity = input("Error! Dato inválido. Ingrese el stock del producto: ")   
-            nuevo_productocliente = Producto(name,description,price,category)   
+            nuevo_productocliente = Productocliente(name,description,price,category)   
             self.productocliente.append(nuevo_productocliente)
             nuevo_producto = Producto(name,description,price,category,quantity)
             self.productos.append(nuevo_producto)
