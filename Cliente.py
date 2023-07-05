@@ -1,11 +1,13 @@
 class Cliente:
-    def __init__(self, name:str , last_name: str, dni: str, email: str, direction:str , cellphone: str):
+    def __init__(self, name:str , last_name: str, dni: str, email: str, direction:str , cellphone: str, tipo: str):
         self.name = name
         self.last_name = last_name
         self.dni = dni
         self.email = email
         self.direction = direction
         self.cellphone = cellphone
+        self.tipo = tipo
+        
 
     def show(self):
         return f"""
@@ -15,4 +17,5 @@ class Cliente:
         Email: {self.email}
         Direction: {self.direction} 
         Telefono: {self.cellphone}
+        Tipo: {self.tipo}
         """
