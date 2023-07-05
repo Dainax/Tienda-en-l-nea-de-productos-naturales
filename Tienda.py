@@ -111,7 +111,8 @@ class Tienda:
             
             while any(chr.isalpha() for chr in quantity) or not quantity.isdigit():
                 quantity = input("Error! Dato inválido. Ingrese el stock del producto: ")   
-                
+            nuevo_productocliente = Producto(name,description,price,category)   
+            self.productocliente.append(nuevo_productocliente)
             nuevo_producto = Producto(name,description,price,category,quantity)
             self.productos.append(nuevo_producto)
             
@@ -227,7 +228,8 @@ class Tienda:
                 choice = input(f"""Se borrará el producto {dele}, continuar? (Y/N): """)
                 choice = self.ver_yn(choice)
                 if choice == "Y":
-                    self.productos.pop(posicion)      
+                    self.productos.pop(posicion)
+                    self.productocliente.pop(posicion)      
                 elif choice == "N":
                     print("Cancelado")
           
